@@ -20,15 +20,15 @@ after_test:
 artifacts:
   - path: dist\*
 
-#deploy:
-#  - provider: GitHub
-#    release: myproduct-v$(appveyor_build_version)
-#    description: 'Release description'
-#    auth_token:
-#      secure: <your encrypted token> # your encrypted token from GitHub
-#    artifact: /.*\.nupkg/            # upload all NuGet packages to release assets
-#    draft: false
-#    prerelease: false
-#    on:
-#      branch: master                 # release from master branch only
-#      APPVEYOR_REPO_TAG: true        # deploy on tag push only
+deploy:
+  - provider: GitHub
+    release: bsmh-v$(appveyor_build_version)
+    description: ''
+    auth_token:
+      secure: P6QF2KUniooo2VpHVHCBi/C/f8g5kaGLaRIJAvY6WH/JQKB3Li6y0gtVjkpMc8Ry
+    artifact: dist\*
+    draft: false
+    prerelease: false
+    on:
+      branch: master                 # release from master branch only
+      #APPVEYOR_REPO_TAG: true        # deploy on tag push only
