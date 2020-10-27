@@ -1,0 +1,6 @@
+pylint
+black
+pytest
+setuptools
+wheel
+pyinstaller

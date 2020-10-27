@@ -1,0 +1,35 @@
+environment:
+
+  matrix:
+
+    - PYTHON: "C:\\Python36-x64"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install -r requirements-dev.txt"
+
+build: off
+
+test_script:
+  - "build.cmd %PYTHON%\\python.exe setup.py test"
+
+after_test:
+  - "build.cmd %PYTHON%\\python.exe setup.py bdist_wheel"
+  - "build.cmd %PYTHON%\\Scripts\\pyinstaller --onefile bsmh/bsmh.py --name bsmh"
+  - cmd: "C:\\projects\\ssapi\\dist\\bsmh.exe"
+
+artifacts:
+  - path: dist\*
+
+#deploy:
+#  - provider: GitHub
+#    release: myproduct-v$(appveyor_build_version)
+#    description: 'Release description'
+#    auth_token:
+#      secure: <your encrypted token> # your encrypted token from GitHub
+#    artifact: /.*\.nupkg/            # upload all NuGet packages to release assets
+#    draft: false
+#    prerelease: false
+#    on:
+#      branch: master                 # release from master branch only
+#      APPVEYOR_REPO_TAG: true        # deploy on tag push only
