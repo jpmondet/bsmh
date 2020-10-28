@@ -137,22 +137,22 @@ def get_last_x_hours_maps(last_hours):
 
     return maps
 
-def create_playlist(maps, args):
-    if args.playlisttitle:
-        PLAYLIST['playlistTitle'] = args.playlisttitle
+def create_playlist(maps, playlisttitle, last_hours, mapnumber):
+    if playlisttitle:
+        PLAYLIST['playlistTitle'] = playlisttitle
     else:
-        PLAYLIST['playlistTitle'] = f"last_{args.mapnumber}_maps" if args.mapnumber else f"last_{args.last}h_maps" 
+        PLAYLIST['playlistTitle'] = f"last_{mapnumber}_maps" if mapnumber else f"last_{last_hours}h_maps" 
 
     now = datetime.utcnow() 
-    delta = now - timedelta(hours=args.last)
+    delta = now - timedelta(hours=last_hours)
     for bsmap in maps:
         map_hash = bsmap['hash']
         map_name = bsmap['name']
         map_key = bsmap['key']
         mapper = bsmap["metadata"]["levelAuthorName"]
         map_dict = {"hash": map_hash, "songName": map_name, "key": map_key, "mapper": mapper}
-        if args.mapnumber:
-            if len(PLAYLIST['songs']) < args.mapnumber:
+        if mapnumber:
+            if len(PLAYLIST['songs']) < mapnumber:
                 #"uploader":{"_id":"5dd5a3cef07e3c0006059d2f","username":"halcyon10"} 
                 PLAYLIST['songs'].append(map_dict)
         else:
@@ -160,12 +160,18 @@ def create_playlist(maps, args):
             if map_upload_time > delta:
                 PLAYLIST['songs'].append(map_dict)
 
-    with open(f"{PLAYLIST['playlistTitle']}.bplist", "w") as plist_file:
+    playlist_filename = f"{PLAYLIST['playlistTitle']}.bplist"
+    with open(playlist_filename, "w") as plist_file:
         dump(PLAYLIST, plist_file)
 
-def download_songs(output_directory="."):
+    return playlist_filename
+
+def download_songs(playlist_filename, output_directory="."):
     output_dir = Path(output_directory)
 
+    with open(playlist_filename, "r") as plist_file:
+        PLAYLIST = load(plist_file)
+    
     nb_maps = len(PLAYLIST['songs'])
     print(f"There are {str(nb_maps)} in this playlist.")
     for i, bsmap in enumerate(PLAYLIST['songs']):
@@ -221,7 +227,7 @@ def remove_all_maps_from_playlist_in_dir(playlist, directory):
                 except KeyError:
                     # In case the playlist didn't have all the needed infos
                     remote_map = get_map(bsmap['hash'])
-                    songname = f"{remote_map['key']} ({remote_map['name']} - {bsmap['metadata']['levelAuthorName']})"
+                    songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
                 songname_file = ''.join(char for char in songname if not char in ILLEGAL_CHARS)
                 map_dir = dir_path / songname_file
                 if map_dir.exists():
@@ -235,12 +241,18 @@ def main():
 
     args = handle_args()
 
+    if args.playlist:
+        if args.remove:
+            remove_all_maps_from_playlist_in_dir(args.playlist, args.maps_dir)
+            exit(0)
+        if args.download:
+            download_songs(args.playlist, args.maps_dir)
+            exit(0)
+
     if args.remove:
-        if not args.playlist:
-            print("Please, specify the playlist file of the songs you wish to remove")
-            exit(1)
-        remove_all_maps_from_playlist_in_dir(args.playlist, args.maps_dir)
-        exit(0)
+        print("Please, specify the playlist file of the songs you wish to remove")
+        exit(1)
+
 
     if args.mapnumber:
         maps = get_last_x_maps(args.mapnumber)
@@ -248,9 +260,9 @@ def main():
         maps = get_last_x_hours_maps(args.last)
 
     if maps:
-        create_playlist(maps, args)
+        playlist_filename = create_playlist(maps, args.playlisttitle, args.last, args.mapnumber)
         if args.download:
-            download_songs(args.maps_dir)
+            download_songs(playlist_filename, args.maps_dir)
 
 if __name__ == "__main__":
     main()
