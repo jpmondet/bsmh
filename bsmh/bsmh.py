@@ -208,7 +208,7 @@ def download_songs(playlist_filename, output_directory="."):
                     with open(f"{zip_file}", 'wb') as f:
                         copyfileobj(r.raw, f)
             except:
-                print(f"Oops, can't download {bsmap['songName']} :(  (hash: {bsmap['hash']}, key: {bsmap['key]}) Is it deleted?")
+                print(f"Oops, can't download {bsmap['songName']} :(  (hash: {bsmap['hash']}, key: {bsmap['key']}) Is it deleted?")
                 continue
         else:
             print(f"{songname} zip file already downloaded")
