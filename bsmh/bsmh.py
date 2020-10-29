@@ -66,6 +66,12 @@ def handle_args():
                 type=str,
                 )
     parser.add_argument(
+                "-o",
+                "--playlistoutputdir",
+                type=str,
+                default=".",
+                )
+    parser.add_argument(
                 "-d",
                 "--download",
                 type=bool,
@@ -82,7 +88,7 @@ def handle_args():
                 )
     parser.add_argument(
                 "-p",
-                "--playlist",
+                "--playlist_filename",
                 type=str,
                 )
     return parser.parse_args()
@@ -137,7 +143,7 @@ def get_last_x_hours_maps(last_hours):
 
     return maps
 
-def create_playlist(maps, playlisttitle, last_hours, mapnumber):
+def create_playlist(maps, playlisttitle, last_hours, mapnumber, playlistoutputdir):
     if playlisttitle:
         PLAYLIST['playlistTitle'] = playlisttitle
     else:
@@ -160,8 +166,9 @@ def create_playlist(maps, playlisttitle, last_hours, mapnumber):
             if map_upload_time > delta:
                 PLAYLIST['songs'].append(map_dict)
 
+    output_dir = Path(playlistoutputdir)
     playlist_filename = f"{PLAYLIST['playlistTitle']}.bplist"
-    with open(playlist_filename, "w") as plist_file:
+    with open(output_dir / playlist_filename, "w") as plist_file:
         dump(PLAYLIST, plist_file)
 
     return playlist_filename
@@ -241,12 +248,12 @@ def main():
 
     args = handle_args()
 
-    if args.playlist:
+    if args.playlist_filename:
         if args.remove:
-            remove_all_maps_from_playlist_in_dir(args.playlist, args.maps_dir)
+            remove_all_maps_from_playlist_in_dir(args.playlist_filename, args.maps_dir)
             exit(0)
         if args.download:
-            download_songs(args.playlist, args.maps_dir)
+            download_songs(args.playlist_filename, args.maps_dir)
             exit(0)
 
     if args.remove:
@@ -260,7 +267,7 @@ def main():
         maps = get_last_x_hours_maps(args.last)
 
     if maps:
-        playlist_filename = create_playlist(maps, args.playlisttitle, args.last, args.mapnumber)
+        playlist_filename = create_playlist(maps, args.playlisttitle, args.last, args.mapnumber, args.playlistoutputdir)
         if args.download:
             download_songs(playlist_filename, args.maps_dir)
 
