@@ -247,7 +247,7 @@ def remove_all_maps_from_playlist_in_dir(playlist, directory):
                         remote_map = get_map(bsmap['hash'])
                         songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
                     except KeyError:
-                        print(f"Damned, we can't remove the map {bsmap}: not enough info in playlist and it looks like it has been removed from bsaver :("))
+                        print(f"Damned, we can't remove the map {bsmap}: not enough info in playlist and it looks like it has been removed from bsaver :(")
                         continue
                 songname_file = ''.join(char for char in songname if not char in ILLEGAL_CHARS)
                 map_dir = dir_path / songname_file
