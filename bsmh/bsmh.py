@@ -189,7 +189,13 @@ def download_songs(playlist_filename, output_directory="."):
         # string zip = Path.Combine(Utils.BeatSaberPath, CustomSongsFolder, Map.hash) + ".zip";
         # string mapName = string.Concat(($"{Map.key} ({Map.metadata.songName} - {Map.metadata.levelAuthorName})")
         #        .Split(ModAssistant.Utils.Constants.IllegalCharacters));
-        songname = f"{bsmap['key']} ({bsmap['songName']} - {bsmap['mapper']})"
+        try:
+            songname = f"{bsmap['key']} ({bsmap['songName']} - {bsmap['mapper']})"
+        except KeyError:
+            # TODO: maybe try to get info from bsaver like with the 'remove' function
+            print("Hmm, this playlist doesn't have all the necessary infos for each map, sorry")
+            return
+
         songname_file = ''.join(char for char in songname if not char in ILLEGAL_CHARS)
         # They also use pure hash for the zip file :
         zip_file = f"{bsmap['hash']}.zip"
@@ -197,9 +203,13 @@ def download_songs(playlist_filename, output_directory="."):
         file_to_dl = Path('.') / zip_file
         if not file_to_dl.exists():
             print(f"   - File doesn't exist, downloading {songname}, please wait...")
-            with get(f"{BASE_URL}{DOWNLOAD_HASH}{bsmap['hash']}", headers=FAKE_HEADERS, stream=True) as r:
-                with open(f"{zip_file}", 'wb') as f:
-                    copyfileobj(r.raw, f)
+            try:
+                with get(f"{BASE_URL}{DOWNLOAD_HASH}{bsmap['hash']}", headers=FAKE_HEADERS, stream=True) as r:
+                    with open(f"{zip_file}", 'wb') as f:
+                        copyfileobj(r.raw, f)
+            except:
+                print(f"Oops, can't download {bsmap['songName']} :(  (hash: {bsmap['hash']}, key: {bsmap['key]}) Is it deleted?")
+                continue
         else:
             print(f"{songname} zip file already downloaded")
 
@@ -233,8 +243,12 @@ def remove_all_maps_from_playlist_in_dir(playlist, directory):
                     songname = f"{bsmap['key']} ({bsmap['songName']} - {bsmap['mapper']})"
                 except KeyError:
                     # In case the playlist didn't have all the needed infos
-                    remote_map = get_map(bsmap['hash'])
-                    songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
+                    try:
+                        remote_map = get_map(bsmap['hash'])
+                        songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
+                    except KeyError:
+                        print(f"Damned, we can't remove the map {bsmap}: not enough info in playlist and it looks like it has been removed from bsaver :("))
+                        continue
                 songname_file = ''.join(char for char in songname if not char in ILLEGAL_CHARS)
                 map_dir = dir_path / songname_file
                 if map_dir.exists():
