@@ -4,6 +4,8 @@ environment:
 
     - PYTHON: "C:\\Python36-x64"
 
+skip_tags: true
+
 install:
   - "%PYTHON%\\python.exe -m pip install -r requirements-dev.txt"
 
@@ -22,6 +24,7 @@ artifacts:
 
 deploy:
   - provider: GitHub
+    skip_tags: true
     release: bsmh-v$(appveyor_build_version)
     description: ''
     auth_token:

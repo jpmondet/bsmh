@@ -193,8 +193,13 @@ def download_songs(playlist_filename, output_directory="."):
             songname = f"{bsmap['key']} ({bsmap['songName']} - {bsmap['mapper']})"
         except KeyError:
             # TODO: maybe try to get info from bsaver like with the 'remove' function
-            print("Hmm, this playlist doesn't have all the necessary infos for each map, sorry")
-            return
+            # In case the playlist didn't have all the needed infos
+            try:
+                remote_map = get_map(bsmap['hash'])
+                songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
+            except KeyError:
+                print(f"Damned, we can't download the map {bsmap}: not enough info in playlist and it looks like it has been removed from bsaver :(")
+                continue
 
         songname_file = ''.join(char for char in songname if not char in ILLEGAL_CHARS)
         # They also use pure hash for the zip file :
