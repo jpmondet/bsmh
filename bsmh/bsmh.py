@@ -249,6 +249,7 @@ def remove_all_maps_from_playlist_in_dir(playlist, directory):
                 except KeyError:
                     # In case the playlist didn't have all the needed infos
                     try:
+                        print(f"infos from map {bsmap['hash']} are missing. Trying to get them from bsaver")
                         remote_map = get_map(bsmap['hash'])
                         songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
                     except KeyError:
