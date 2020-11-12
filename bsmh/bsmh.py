@@ -2,6 +2,7 @@
 
 from sys import exit, stdout
 from json import dump, load
+from json.decoder import JSONDecodeError
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
 from shutil import copyfileobj, rmtree, unpack_archive
@@ -138,7 +139,6 @@ def handle_args():
 
 
 def get_page(page=0):
-    # TODO : Handle errors
     return get(f"{BASE_URL}{LATEST_MAPS}{str(page)}", headers=FAKE_HEADERS).json()["docs"]
 
 
@@ -166,17 +166,26 @@ def get_last_x_maps(nb_maps):
     maps = []
 
     for page in progressbar(range(int(pages_to_scrap)), "Getting page number : "):
-        maps.extend(get_page(page))
+        try:
+            maps.extend(get_page(page))
+        except (KeyError, JSONDecodeError):
+            print(f"Something went wrong while getting page {page}...(Connection error or bsaver dying)")
+
     return maps
 
 
 def get_last_x_hours_maps(last_hours):
     now = datetime.utcnow()
 
-    maps = get_page()
+    try:
+        maps = get_page()
+    except (KeyError, JSONDecodeError):
+        print(f"Something went wrong while getting 1st page ...(Connection error or bsaver dying)")
+        exit(1)
 
     delta, most_recent, less_recent = check_time(now, maps, last_hours)
 
+    retries = 1
     if most_recent < delta:
         print(f"No new maps in the last {last_hours}h, sorry.")
         exit(0)
@@ -185,9 +194,20 @@ def get_last_x_hours_maps(last_hours):
         page = 1
         while less_recent > delta:
             print(f"Getting page {page}")
-            maps.extend(get_page(page))
+            try:
+                maps.extend(get_page(page))
+            except (KeyError, JSONDecodeError):
+                print(f"Something went wrong while getting 1st page ...(Connection error or bsaver dying)")
+                if retries < 4:
+                    print(f"Retrying...({retries})")
+                    retries += 1
+                    continue
+                else:
+                    print("Retries too much times...stopping.")
+                    exit(1)
             delta, most_recent, less_recent = check_time(now, maps, last_hours)
             page += 1
+            retries = 1
 
     return maps
 
@@ -244,12 +264,10 @@ def download_songs(playlist_filename, output_directory="."):
         try:
             songname = f"{bsmap['key']} ({bsmap['songName']} - {bsmap['mapper']})"
         except KeyError:
-            # TODO: maybe try to get info from bsaver like with the 'remove' function
-            # In case the playlist didn't have all the needed infos
             try:
                 remote_map = get_map(bsmap["hash"])
                 songname = f"{remote_map['key']} ({remote_map['name']} - {remote_map['metadata']['levelAuthorName']})"
-            except KeyError:
+            except (KeyError, JSONDecodeError) :
                 print(
                     f"Damned, we can't download the map {bsmap}: not enough info in playlist and it looks like it has been removed from bsaver :("
                 )
