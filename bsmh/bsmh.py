@@ -278,6 +278,24 @@ def download_songs(playlist_filename, output_directory="."):
         # They also use pure hash for the zip file :
         zip_file = f"{bsmap['hash']}.zip"
 
+        # Could extract directly :
+        #from io import BytesIO
+        #from zipfile import ZipFile
+        #from urllib.request import urlopen
+        ## or: requests.get(url).content
+
+        #resp = urlopen("http://www.test.com/file.zip")
+        #zipfile = ZipFile(BytesIO(resp.read()))
+        #for line in zipfile.open(file).readlines():
+        #    print(line.decode('utf-8'))
+
+        #Here file is a string. To get the actual string that you want to pass, you can use zipfile.namelist(). For instance,
+
+        #resp = urlopen('http://mlg.ucd.ie/files/datasets/bbc.zip')
+        #zipfile = ZipFile(BytesIO(resp.read()))
+        #zipfile.namelist()
+        ## ['bbc.classes', 'bbc.docs', 'bbc.mtx', 'bbc.terms']
+
         file_to_dl = Path(".") / zip_file
         if not file_to_dl.exists():
             print(f"   - File doesn't exist, downloading {songname}, please wait...")
